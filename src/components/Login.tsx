@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../services/auth';
 import { Mail, Lock, Eye, EyeOff, LoaderCircle } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login: loginCtx, isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
@@ -13,6 +15,12 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -20,8 +28,8 @@ export default function Login() {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await login(email, password);
-      
+      const { user, token } = await login(email, password);
+      loginCtx(user, token);
       navigate('/');
     } catch (err) {
       setError('Email o contraseña incorrectos. Por favor, inténtalo de nuevo.');
@@ -35,7 +43,7 @@ export default function Login() {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg dark:bg-slate-800">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-            Bienvenido de nuevo
+            Login kit-inicio
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
             Inicia sesión para continuar
